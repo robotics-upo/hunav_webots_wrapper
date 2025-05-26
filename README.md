@@ -1,10 +1,10 @@
 # hunav_webots_wrapper
 
-**This version is WIP**
+**This version is still WIP**
 
 This is a **ROS2 wrapper** to use [**HuNavSim**](https://github.com/robotics-upo/hunav_sim) with the **Webots** simulator (tested with ROS2 Humble and Webots R2025a). We provide three different simulation scenes (an office, a factory, and a hall) with different agent configurations.
 
-![](https://github.com/robotics-upo/hunav_webots_wrapper/tree/devel/media/factory_tiago1.png)
+![](media/factory_tiago1.png)
 
 ## Main components
 
@@ -33,7 +33,7 @@ To use the package, clone it to you ROS2 workspace and compile it with the stand
 
 ## Usage example
 
-*This package provides three different scenarios already set up with three different pre-configurations of human agents: 
+This package provides three different scenarios already set up with three different pre-configurations of human agents: 
 `office`, `factory` and `hall`. You can find their respective configuration files in the <em>config</em> folder. Feel free to modify them to simulate different behaviors, number of agents, etc. For example, to launch the `factory` scenario, you can run in your terminal:
 
  ```sh 
