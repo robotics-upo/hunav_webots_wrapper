@@ -1,7 +1,10 @@
 # hunav_webots_wrapper
 
+**This version is WIP**
+
 This is a **ROS2 wrapper** to use [**HuNavSim**](https://github.com/robotics-upo/hunav_sim) with the **Webots** simulator (tested with ROS2 Humble and Webots R2025a). We provide three different simulation scenes (an office, a factory, and a hall) with different agent configurations.
 
+![](https://github.com/robotics-upo/hunav_webots_wrapper/blob/master/media/factory_tiago1.png)
 
 ## Main components
 
@@ -37,4 +40,8 @@ To use the package, clone it to you ROS2 workspace and compile it with the stand
     ros2 launch hunav_webots_wrapper hunavsim_launch_factory.py
   ```
 
-This will cause Webots to launch the simulated environment with the specified agents. An rviz window will pop up too. You can send goals to the robot using the standard 
+This will cause Webots to launch the simulated environment with the specified agents. An rviz window will pop up too. You can send goals to the robot using the standard Nav2 Goal tool. 
+
+## Troubleshooting
+
+The simulator may take a while to load after a clean build, which can result in HuNavSim not properly loading the agents. If this happens, close the simulator with Ctrl+C and launch it again.
