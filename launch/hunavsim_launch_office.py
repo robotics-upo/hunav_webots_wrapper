@@ -133,7 +133,6 @@ def generate_launch_description():
     # World generation parameters
     world_file_name = LaunchConfiguration('world')
     urdf_folder_name = LaunchConfiguration('urdf_folder')
-    rate = LaunchConfiguration('update_rate')
     robot_name = LaunchConfiguration('robot_name')
     global_frame = LaunchConfiguration('global_frame_to_publish')
     use_navgoal = LaunchConfiguration('use_navgoal_to_start')
@@ -175,7 +174,6 @@ def generate_launch_description():
         output='screen',
         parameters=[{'base_world': world_file_name},
         {'urdf_path' : resource_folder},
-        {'update_rate': rate},
         {'robot_name': robot_name},
         {'global_frame_to_publish': global_frame},
         {'use_navgoal_to_start': use_navgoal},
@@ -282,10 +280,7 @@ def generate_launch_description():
         'urdf_folder', default_value='resource',
         description='Specify urdf folder name'
     )
-    declare_update_rate = DeclareLaunchArgument(
-        'update_rate', default_value='50.0',
-        description='Update rate of the plugin'
-    )
+
     declare_robot_name = DeclareLaunchArgument(
         'robot_name', default_value='Tiago_Lite',
         description='Specify the name of the robot model'
@@ -324,7 +319,6 @@ def generate_launch_description():
     ld.add_action(declare_metrics_conf_file)
     ld.add_action(declare_arg_world)
     ld.add_action(declare_urdf_folder)
-    ld.add_action(declare_update_rate)
     ld.add_action(declare_robot_name)
     ld.add_action(declare_frame_to_publish)
     ld.add_action(declare_use_navgoal)

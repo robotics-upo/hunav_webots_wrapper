@@ -34,7 +34,11 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/develop/projec
 
 
 WorldInfo {
-  basicTimeStep 20
+  info [
+    "This simulation that features the Tiago robot in a squared factory environment"
+  ]
+  title "Factory"
+  optimalThreadCount 4
 }
 Viewpoint {
   orientation 0.20991621131898758 0.5790357422816553 -0.7878152025607368 0.8625410243080257

@@ -28,7 +28,8 @@ WorldInfo {
   info [
     "An office break room, surrounded by office desks."
   ]
-  basicTimeStep 20
+  title "Office"
+  optimalThreadCount 4
 }
 Viewpoint {
   fieldOfView 0.5

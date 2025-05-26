@@ -75,12 +75,11 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/develop/projec
 
 WorldInfo {
   info [
-    "This example uses some of the industrial objects included in Webots to create a factory hall."
-    "The tools, valves and doors are interactive."
-    "This means that a robot could grab a hammer, turn a valve handle, climb the stairs or open a door."
+    "This simulation that features the Tiago robot in a factory hall environment"
   ]
+  title "Factory"
   title "A factory hall environment"
-  basicTimeStep 20
+  optimalThreadCount 4
 }
 DEF VIEWPOINT Viewpoint {
   orientation 0.19164996383925656 0.30721420386093523 -0.9321425450576233 1.1864089281314691
