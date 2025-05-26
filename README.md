@@ -4,7 +4,7 @@
 
 This is a **ROS2 wrapper** to use [**HuNavSim**](https://github.com/robotics-upo/hunav_sim) with the **Webots** simulator (tested with ROS2 Humble and Webots R2025a). We provide three different simulation scenes (an office, a factory, and a hall) with different agent configurations.
 
-![](https://github.com/robotics-upo/hunav_webots_wrapper/blob/master/media/factory_tiago1.png)
+![](https://github.com/robotics-upo/hunav_webots_wrapper/tree/devel/media/factory_tiago1.png)
 
 ## Main components
 
