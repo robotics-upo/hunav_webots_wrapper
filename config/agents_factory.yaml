@@ -1,0 +1,130 @@
+hunav_loader:
+  ros__parameters:
+    map: factory
+    publish_people: true
+    agents:
+      - agent1
+      - agent2
+      - agent3
+    agent1:
+      id: 1
+      skin: 0
+      group_id: -1
+      max_vel: 1.5
+      radius: 0.4
+      behavior: 
+        type: 1 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 0 # def: 0, custom:1, random_normal:2, random_uniform:3
+        duration: 40.0  # seg
+        once: true
+        vel: 0.5
+        dist: 0.15
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 7.0
+        other_force_factor: 20.0
+      init_pose:
+        x: 1.50
+        y: 0.00
+        z: 0.01
+        h: 0.0
+      goal_radius: 0.3
+      cyclic_goals: true
+      goals:
+        - g0
+        - g1
+        - g2
+      g0:
+        x: 4.98
+        y: -0.64
+        h: 0.0
+      g1:
+        x: 6.10
+        y: -5.04
+        h: 0.0
+      g2:
+        x: 5.78
+        y: -8.25
+        h: 0.0
+    
+    agent2:
+        id: 2
+        skin: 1
+        group_id: -1
+        max_vel: 1.5
+        radius: 0.4
+        behavior: 
+          type: 6 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+          configuration: 2   # def: 0, custom:1, random_normal:2, random_uniform:3
+          duration: 40.0  # seg
+          once: true
+          vel: 0.5
+          dist: 0.15
+          goal_force_factor: 2.0
+          obstacle_force_factor: 10.0
+          social_force_factor: 7.0
+          other_force_factor: 20.0
+        init_pose:
+          x: -6.16
+          y: 0.11
+          z: 0.01
+          h: 0.0
+        goal_radius: 0.3
+        cyclic_goals: true
+        goals:
+          - g0
+          - g1
+          - g2
+        g0:
+          x: -6.59
+          y: -3.75
+          h: 0.00000
+        g1:
+          x: -6.45
+          y: -6.81
+          h: 0.0
+        g2:
+          x: -3.81
+          y: -8.1
+          h: 0.0
+
+    agent3:
+      id: 3
+      skin: 2
+      group_id: -1
+      max_vel: 1.5
+      radius: 0.4
+      behavior: 
+        type: 3 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 3   # def: 0, custom:1, random_normal:2, random_uniform:3
+        duration: 40.0  # seg
+        once: true
+        vel: 0.5
+        dist: 0.15
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 7.0
+        other_force_factor: 20.0
+      init_pose:
+        x: -2.05
+        y: -8.71
+        z: 0.01
+        h: 0.0
+      goal_radius: 0.3
+      cyclic_goals: true
+      goals:
+        - g0
+        - g1
+        - g2
+      g0:
+        x: 2.10
+        y: -7.33
+        h: 0.0
+      g1:
+        x: 7.11
+        y: -4.91
+        h: 0.0
+      g2:
+        x: 3.30
+        y: -0.82
+        h: 0.0

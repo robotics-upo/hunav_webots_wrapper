@@ -1,0 +1,88 @@
+hunav_loader:
+  ros__parameters:
+    map: office
+    publish_people: true
+    agents:
+      - agent1
+      - agent2
+    agent1:
+      id: 1
+      skin: 0
+      group_id: -1
+      max_vel: 1.5
+      radius: 0.4
+      behavior: 
+        type: 1 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 0 # def: 0, custom:1, random_normal:2, random_uniform:3
+        duration: 40.0  # seg
+        once: true
+        vel: 0.5
+        dist: 0.0
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 7.0
+        other_force_factor: 20.0
+      init_pose:
+        x: -0.60937
+        y: -5.00
+        z: 0.01
+        h: 1.250000
+      goal_radius: 0.3
+      cyclic_goals: true
+      goals:
+        - g0
+        - g1
+        - g2
+      g0:
+        x: 1.253
+        y: -4.125
+        h: 0.0
+      g1:
+        x: -0.63
+        y: -1.50
+        h: 1.250000
+      g2:
+        x: -3.59
+        y: -1.14
+        h: 1.250000
+    
+    agent2:
+        id: 2
+        skin: 1
+        group_id: -1
+        max_vel: 1.5
+        radius: 0.4
+        behavior: 
+          type: 5 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+          configuration: 5   # def: 0, custom:1, random_normal:2, random_uniform:3
+          duration: 40.0  # seg
+          once: true
+          vel: 0.5
+          dist: 0.5
+          goal_force_factor: 2.0
+          obstacle_force_factor: 10.0
+          social_force_factor: 7.0
+          other_force_factor: 20.0
+        init_pose:
+          x: -3.62
+          y: 5.11
+          z: 0.01
+          h: 1.48
+        goal_radius: 0.3
+        cyclic_goals: true
+        goals:
+          - g0
+          - g1
+          - g2
+        g0:
+          x: -1.84
+          y: 3.14
+          h: 1.48
+        g1:
+          x: -1.55
+          y: -0.02
+          h: 1.48
+        g2:
+          x: -1.72
+          y: -1.42
+          h: 1.74
