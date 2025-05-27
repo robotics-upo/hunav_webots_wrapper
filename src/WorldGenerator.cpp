@@ -72,7 +72,6 @@ WorldGenerator::WorldGenerator() : Node("hunav_webots_world_generator")
   // Read the agents parameters
   readAgentParams();
   // // Generate the world
-  // processXML();
   appendAgentsToWorldFile();
   generateAgentURDFFiles();
 }
@@ -100,7 +99,6 @@ void WorldGenerator::readPluginParams()
   std::string base_world_name = this->declare_parameter<std::string>("base_world", std::string("factory.wbt"));
   urdf_folder_ = this->declare_parameter<std::string>("urdf_folder", std::string(urdf_shared_dir));
   plug_use_gazebo_obs_ = this->declare_parameter<bool>("use_gazebo_obs", false);
-  plug_update_rate_ = this->declare_parameter<double>("update_rate", 100.0);
   plug_robot_name_ = this->declare_parameter<std::string>("robot_name", std::string("robot"));
   RCLCPP_INFO(this->get_logger(), "Robot name: %s", plug_robot_name_.c_str());
   plug_global_frame_ = this->declare_parameter<std::string>("global_frame_to_publish", std::string("map"));
@@ -332,21 +330,20 @@ std::string WorldGenerator::generateAgentWBT(const hunav_msgs::msg::Agent &agent
   // default physics.
   // oss << "  physics Physics { }\n";
 
-  // --- Physics for a ~75 kg human ---
-  oss << "  physics Physics {\n";
-  oss << "    density       -1       # ignore density, use mass\n";
-  oss << "    mass          75       # kg\n";
-  oss << "    centerOfMass  [ 0 0 0.9 ]\n";
-  oss << "    inertiaMatrix [\n";
-  oss << "      22.1  0.0   0.0\n";
-  oss << "      0.0   4.59  0.0\n";
-  oss << "      0.0   0.0  22.1\n";
-  oss << "    ]\n";
-  oss << "    damping Damping {\n";
-  oss << "      linear  0.5\n";
-  oss << "      angular 0.5\n";
-  oss << "    }\n";
-  oss << "  }\n";
+  // // --- Physics for a ~75 kg human ---
+  // oss << "  physics Physics {\n";
+  // oss << "    density       -1       # ignore density, use mass\n";
+  // oss << "    mass          75       # kg\n";
+  // oss << "    centerOfMass  [ 0 0 0.9 ]\n";
+  // oss << "    inertiaMatrix [\n";
+  // oss << "      1e6 1e6 1.0\n";  // Ixx Iyy Izz — > 0
+  // oss << "      0.0  0.0  0.0\n";   // Ixy Ixz Iyz — ok for symmetry
+  // oss << "    ]\n";
+  // oss << "    damping Damping {\n";
+  // oss << "      linear  0.5\n";
+  // oss << "      angular 2.0\n";
+  // oss << "    }\n";
+  // oss << "  }\n";
 
   // controller.
   oss << "  controller \"<extern>\"\n";
@@ -477,11 +474,6 @@ std::string WorldGenerator::populateAgentURDF(const hunav_msgs::msg::Agent &agen
   // The topic could be constructed from agent.name, e.g. "my_agent/goal_pose"
   navGoalElem->SetText(plug_navgoal_topic_.c_str());
   pluginElem->InsertEndChild(navGoalElem);
-
-  // Add <update_rate> element.
-  XMLElement* updateRateElem = doc.NewElement("update_rate");
-  updateRateElem->SetText(plug_update_rate_);
-  pluginElem->InsertEndChild(updateRateElem);
 
   // Add <ignore_models> element.
   XMLElement* ignoreModelsElem = doc.NewElement("ignore_models");

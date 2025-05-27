@@ -59,7 +59,7 @@ class HuNavPluginPrivate{
     void collectCollisionPrimitives(WbNodeRef node, std::vector<WbNodeRef>& out);
       /// Computes the closest point on a (“box‐aligned”) bounding volume in Webots.
     std::vector<Eigen::Vector3d> GetClosestPointOnBoundingBox(const Eigen::Vector3d& point, WbNodeRef modelNode);
-    void UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& _agents);
+    void UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& _agents, const double &dt);
 
     /// \brief Helper function to initialize the agents at the initial step
     void InitializeAgents();
@@ -83,7 +83,6 @@ class HuNavPluginPrivate{
     void manageAnimations(const double &dt);
 
     rclcpp::Time rostime;
-    double update_rate_secs;
     double lastUpdate = wb_robot_get_time();
     double lastAgentUpdate = wb_robot_get_time();
     double startTime = wb_robot_get_time();
@@ -225,21 +224,6 @@ void HuNavPlugin::init(
     hnav_->goalReceived = true;
   }
 
-  if (parameters.find("update_rate") != parameters.end()) {
-    double update_rate = std::stod(parameters["update_rate"]);
-    if (update_rate > 0.0) {
-      hnav_->update_rate_secs = 1.0 / update_rate;
-      RCLCPP_INFO(node->get_logger(), "Parameter update_rate: %.2f Hz, update_rate_secs: %.4f", update_rate, hnav_->update_rate_secs);
-    } else {
-      hnav_->update_rate_secs = 0.0;
-      RCLCPP_WARN(node->get_logger(), "Parameter update_rate <= 0, setting update_rate_secs to 0.0");
-    }
-  } else {
-    // Default update rate (e.g., 100 Hz)
-    hnav_->update_rate_secs = 1.0 / 100.0;
-    RCLCPP_INFO(node->get_logger(), "Parameter update_rate not provided, using default: 100 Hz (update_rate_secs: %.4f)", hnav_->update_rate_secs);
-  }
-
   if (parameters.find("ignore_models") != parameters.end()) {
     // Assume ignore_models is given as comma-separated names, e.g., "model1,model2"
     std::string modelsStr = parameters["ignore_models"];
@@ -280,7 +264,8 @@ void HuNavPlugin::init(
    // 1) Load all available animations
   std::vector<std::string> animations = { "walk.bvh",           "69_02_walk_forward.bvh",   "137_28-normal_wait.bvh",
                                        "142_01-walk_childist.bvh", "07_04-slow_walk.bvh",      "02_01-walk.bvh",
-                                       "142_17-walk_scared.bvh",   "17_01-walk_with_anger.bvh" };
+                                       "142_17-walk_scared.bvh",   "17_01-walk_with_anger.bvh", "141_20-waiting.bvh", "141_16-wave_hello.bvh"
+                                       "jump.bvh", "normal_wait_mod.bvh" };
   // if (parameters.find("motion_file") != parameters.end())
   //   motion_name = parameters["motion_file"];
 
@@ -572,8 +557,9 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
 
     // 2) rotation
     const double *R = wb_supervisor_node_get_orientation(node);
-    double yaw = std::atan2(R[3], R[0]);
-    yaw = normalizeAngle(yaw);
+    double yaw_f = std::atan2(R[3], R[0]);
+    yaw_f = normalizeAngle(yaw_f);
+
     // Compute the differences with respect to the previously stored pose.
     // Note: pedestrians[i].position.position.x and .y are expected to store the last known horizontal position.
 
@@ -587,6 +573,7 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
 
     double xi = ped.position.position.x;
     double yi = ped.position.position.y;
+    double yaw_i = ped.yaw;
 
     // // // // //Update velocities manually
     // double dist = sqrt((xf - xi) * (xf - xi) + (yf - yi) * (yf - yi));
@@ -595,30 +582,14 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
     // double vx = (xf - xi) / dt;
     // double vy = (yf - yi) / dt;
 
-    //Log the updated fields for this agent.
-    // RCLCPP_INFO(node_->get_logger(),
-    // "Read pose: %s | pos: (%.2f, %.2f, %.2f) | yaw: (%.2f) | linvel: (%.2f) | angvel: (%.2f)",
-    // pedestrians[i].name.c_str(), 
-    // newPos[0], newPos[1], newPos[2],
-    // yaw, linearVelocity, anvel);
-    // In case a reset signal is active, set all velocities to zero.
-    if (reset)
-    {
-      linearVelocity = 0.0;
-      vx = 0.0;
-      vy = 0.0;
-      anvel = 0.0;
-    }
-    // If the computed linear velocity exceeds the desired velocity, clamp it.
-    else if (linearVelocity > ped.desired_velocity)
-    {
-      linearVelocity = ped.desired_velocity;
-      double maxd = linearVelocity * dt;
-      if (fabs(xf - xi) > maxd)
-        vx = ((xf - xi) / fabs(xf - xi)) * maxd / dt;
-      if (fabs(yf - yi) > maxd)
-        vy = ((yf - yi) / fabs(yf - yi)) * maxd / dt;
-    }
+    // //Log the updated fields for this agent.
+    RCLCPP_INFO(node_->get_logger(),
+    "Read pose: %s | pos: (%.2f, %.2f, %.2f) | yaw: (%.2f) | linvel: (%.2f) | angvel: (%.2f)",
+    pedestrians[i].name.c_str(), 
+    newPos[0], newPos[1], newPos[2],
+    yaw_f, linearVelocity, anvel);
+
+
     // Update the pedestrian’s velocity and angular velocity fields.
     ped.velocity.linear.x = vx;
     ped.velocity.linear.y = vy;
@@ -630,14 +601,13 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
     // Here we store the new horizontal coordinates.
     ped.position.position.x = xf;
     ped.position.position.y = yf;
-
+    // Update the stored yaw value.
+    ped.yaw = yaw_f;
     // Construct a quaternion from the yaw angle.
     tf2::Quaternion myQuaternion;
-    myQuaternion.setRPY(0, 0, yaw);
+    myQuaternion.setRPY(0, 0, yaw_f);
     ped.position.orientation = tf2::toMsg(myQuaternion);
 
-    // Update the stored yaw value.
-    ped.yaw = yaw;
   }
 
   // Clear the reset flag after processing.
@@ -647,7 +617,7 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
 }
 
 
-void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& _agents){
+void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& _agents, const double &dt){
 
    // If the robot navigation goal has not been received, log and return.
    if (goalReceived == false)
@@ -681,42 +651,47 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
        a.position.position.y, 
        a.position.position.z,
      };
-    wb_supervisor_field_set_sf_vec3f(trans_field, newPos);
+    // wb_supervisor_field_set_sf_vec3f(trans_field, newPos);
  
-     // --- Update the Rotation Field ---
-     // The "rotation" field is of type SFVec4f and expects [axis_x, axis_y, axis_z, angle].
-     WbFieldRef rot_field = wb_supervisor_node_get_field(agent_node, "rotation");
-     tf2::Quaternion q;
-     tf2::fromMsg(a.position.orientation, q);
+    // --- Update the Rotation Field ---
+    // The "rotation" field is of type SFVec4f and expects [axis_x, axis_y, axis_z, angle].
+    WbFieldRef rot_field = wb_supervisor_node_get_field(agent_node, "rotation");
+    tf2::Quaternion q;
+    tf2::fromMsg(a.position.orientation, q);
 
     // 2) Extract yaw in (–π…π]:
     double roll, pitch, yaw;
     tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
     yaw = normalizeAngle(yaw);
 
-    // previous yaw
-    double prev_yaw = ped.yaw;
-    // raw delta
-    double delta = normalizeAngle(yaw - prev_yaw);
-    // clamp
-    double max_delta = 1.5 * this->update_rate_secs;
-    if (delta >  max_delta) delta =  max_delta;
-    if (delta < -max_delta) delta = -max_delta;
-    double new_yaw = normalizeAngle(prev_yaw + delta);
-
     // 4) Push that to Webots around Z:
     const double newRot[4] = { 0.0, 0.0, 1.0, yaw };
-    wb_supervisor_field_set_sf_rotation(rot_field, newRot);
-
-    double yaw_rate = a.velocity.angular.z;
-    if (yaw_rate >  max_delta) yaw_rate =  max_delta;
-    if (yaw_rate < -max_delta) yaw_rate = -max_delta;
+    // wb_supervisor_field_set_sf_rotation(rot_field, newRot);
 
     // Set absolute velocity on the node in world coordinates (physics based)
     // Format: [vx, vy, vz, wx, wy, wz]
+
+    // Check distance between desired and actual pose
+    double dx = a.position.position.x - ped.position.position.x;
+    double dy = a.position.position.y - ped.position.position.y;
+    double dyaw = normalizeAngle(a.yaw - ped.yaw);
+    double lin_dist = std::hypot(dx, dy);
+    double ang_dist = std::fabs(dyaw);
+    
+    double vx = 0.0;
+    double vy = 0.0;
+    double yaw_rate = 0.0;
+    
+    //The surprised animation look 90 degrees right, we must correct it
+    if(a.behavior.type != hunav_msgs::msg::AgentBehavior::BEH_SURPRISED || a.behavior.state == hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE){
+      vx = a.velocity.linear.x;
+      vy = a.velocity.linear.y;
+      yaw_rate = a.velocity.angular.z;
+    }
+
     double vel[6] = {
-      a.velocity.linear.x,
-      a.velocity.linear.y,
+      vx,
+      vy,
       0.0,                // No vertical velocity
       0.0,                // No angular x
       0.0,                // No angular y
@@ -724,12 +699,10 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
     };
     wb_supervisor_node_set_velocity(agent_node, vel);
 
-     // Log updated state
+    //Log updated state
     RCLCPP_INFO(node_->get_logger(),
-      "[→To Webots] Agent '%s' id=%d pos=(%.3f,%.3f,%.3f) rot=(%.3f,%.3f,%.3f,%.3f) vel=(%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)",
+      "[→To Webots] Agent '%s' id=%d vel=(%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)",
       a.name.c_str(), a.id,
-      newPos[0], newPos[1], newPos[2],
-      newRot[0], newRot[1], newRot[2], newRot[3],
       vel[0], vel[1], vel[2], vel[3], vel[4], vel[5]
     );
 
@@ -998,6 +971,9 @@ void HuNavPluginPrivate::HandleObstacles(){
 bool HuNavPluginPrivate::Reset(){
   
   RCLCPP_INFO(node_->get_logger(), "\n\n---------World reset---------\n");
+
+  wb_supervisor_simulation_reset_physics();
+
   // Restore agents' positions in Webots
   for (const auto& agent : this->init_pedestrians) {
     WbNodeRef agent_node = wb_supervisor_node_get_from_def(agent.name.c_str());
@@ -1122,7 +1098,7 @@ std::string HuNavPluginPrivate::chooseAnimation(const hunav_msgs::msg::Agent& ag
   // Set idle animation if agent velocities are near zero
   double lin_vel = agent.linear_vel;
   if (agent.linear_vel < 1e-6) {
-    return "137_28-normal_wait.bvh";  // Or another idle animation
+      return "137_28-normal_wait.bvh";
   }
 
   //Choose inactive animations
@@ -1198,8 +1174,14 @@ void HuNavPluginPrivate::manageAnimations(const double &dt) {
     // Adjust step count: 2 to 5 depending on velocity (linear_vel)
     steps = std::clamp(static_cast<int>(1 + 3 * agent->linear_vel), 1, 6);
 
-  for (int k = 0; k < steps; ++k)
+  for (int k = 0; k < steps; ++k){
     wbu_bvh_step(motion);
+    //The first frame is always a T-pose, so we skip it
+    int frame = wbu_bvh_get_frame_index(motion);
+    if (frame == 0) {
+      wbu_bvh_step(motion);
+    }
+  }
 }
 
 void HuNavPlugin::step() {
@@ -1237,7 +1219,7 @@ void HuNavPlugin::step() {
 
       // service down → re-apply last known service positions
       if (hnav_->have_last_service) {
-        //    UpdateWebotsPedestrians(hnav_->last_service_agents)
+        // hnav_->UpdateWebotsPedestrians(hnav_->last_service_agents, dt);
 
         // RCLCPP_INFO(hnav_->node_->get_logger(),
         //             "compute_agents unavailable, interpolating");
@@ -1278,7 +1260,7 @@ void HuNavPlugin::step() {
             a.angular_vel);
         }
 
-        hnav_->UpdateWebotsPedestrians(interp); 
+        hnav_->UpdateWebotsPedestrians(interp, dt); 
       }
     } 
     
@@ -1305,7 +1287,7 @@ void HuNavPlugin::step() {
           a.angular_vel);
       }
       
-      hnav_->UpdateWebotsPedestrians(response->updated_agents);
+      hnav_->UpdateWebotsPedestrians(response->updated_agents, dt);
       hnav_->last_service_agents = response->updated_agents;
       hnav_->have_last_service = true;
       hnav_->agents_future = {};
