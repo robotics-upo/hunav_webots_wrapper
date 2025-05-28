@@ -8,8 +8,8 @@
 /** All rights reserved.                                               */
 /**                                                                    */
 /** Authors:                                                           */
-/** Noé Pérez-Higueras (maintainer)                                    */
-/** email: noeperez@upo.es                                             */
+/** Andrés Martínez Silva (maintainer)                                    */
+/** email: amarsil1@upo.es                                             */
 /**                                                                    */
 /** This software may be modified and distributed under the terms      */
 /** of the MIT license. See the LICENSE file for details.              */

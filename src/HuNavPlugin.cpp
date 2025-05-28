@@ -1,3 +1,22 @@
+/***********************************************************************/
+/**                                                                    */
+/** HuNavPlugin.cpp                                                 */
+/**                                                                    */
+/** Copyright (c) 2022, Service Robotics Lab (SRL).                    */
+/**                     http://robotics.upo.es                         */
+/**                                                                    */
+/** All rights reserved.                                               */
+/**                                                                    */
+/** Authors:                                                           */
+/** Andrés Martínez Silva (maintainer)                                    */
+/** email: amarsil1@upo.es                                             */
+/**                                                                    */
+/** This software may be modified and distributed under the terms      */
+/** of the MIT license. See the LICENSE file for details.              */
+/**                                                                    */
+/**                                                                    */
+/***********************************************************************/
+
 #include "hunav_webots_wrapper/HuNavPlugin.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -14,6 +33,7 @@
 #include <webots/skin.h>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
+static constexpr double SURPRISED_YAW_OFFSET = M_PI_2;  // +90°
 
 using namespace std::chrono_literals;
 
@@ -560,6 +580,12 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
     double yaw_f = std::atan2(R[3], R[0]);
     yaw_f = normalizeAngle(yaw_f);
 
+    // apply correction when the animation is looking +90 degrees
+    if (ped.behavior.type == hunav_msgs::msg::AgentBehavior::BEH_SURPRISED &&
+        ped.behavior.state != hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE) {
+      yaw_f = normalizeAngle(yaw_f - SURPRISED_YAW_OFFSET);
+    }
+
     // Compute the differences with respect to the previously stored pose.
     // Note: pedestrians[i].position.position.x and .y are expected to store the last known horizontal position.
 
@@ -583,7 +609,7 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
     // double vy = (yf - yi) / dt;
 
     // //Log the updated fields for this agent.
-    RCLCPP_INFO(node_->get_logger(),
+    RCLCPP_DEBUG(node_->get_logger(),
     "Read pose: %s | pos: (%.2f, %.2f, %.2f) | yaw: (%.2f) | linvel: (%.2f) | angvel: (%.2f)",
     pedestrians[i].name.c_str(), 
     newPos[0], newPos[1], newPos[2],
@@ -658,35 +684,35 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
     WbFieldRef rot_field = wb_supervisor_node_get_field(agent_node, "rotation");
     tf2::Quaternion q;
     tf2::fromMsg(a.position.orientation, q);
-
-    // 2) Extract yaw in (–π…π]:
+    //Extract yaw in (–π…π]:
     double roll, pitch, yaw;
     tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
     yaw = normalizeAngle(yaw);
 
-    // 4) Push that to Webots around Z:
+    //Push that to Webots around Z:
     const double newRot[4] = { 0.0, 0.0, 1.0, yaw };
     // wb_supervisor_field_set_sf_rotation(rot_field, newRot);
-
-    // Set absolute velocity on the node in world coordinates (physics based)
-    // Format: [vx, vy, vz, wx, wy, wz]
 
     // Check distance between desired and actual pose
     double dx = a.position.position.x - ped.position.position.x;
     double dy = a.position.position.y - ped.position.position.y;
     double dyaw = normalizeAngle(a.yaw - ped.yaw);
-    double lin_dist = std::hypot(dx, dy);
-    double ang_dist = std::fabs(dyaw);
+
+    // Set absolute velocity on the node in world coordinates (kinematics based)
+    // Format: [vx, vy, vz, wx, wy, wz]
+    double vx = a.velocity.linear.x;
+    double vy = a.velocity.linear.y;
+    double yaw_rate = a.velocity.angular.z;
     
-    double vx = 0.0;
-    double vy = 0.0;
-    double yaw_rate = 0.0;
-    
-    //The surprised animation look 90 degrees right, we must correct it
-    if(a.behavior.type != hunav_msgs::msg::AgentBehavior::BEH_SURPRISED || a.behavior.state == hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE){
-      vx = a.velocity.linear.x;
-      vy = a.velocity.linear.y;
-      yaw_rate = a.velocity.angular.z;
+    //The surprised animation look 90 degrees right, we must correct it --only-- in the simulator
+    if (ped.behavior.type == hunav_msgs::msg::AgentBehavior::BEH_SURPRISED &&
+    ped.behavior.state != hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE){
+      vx = dx;
+      vy = dy;
+      yaw_rate = 0.0;
+      double desired_yaw = normalizeAngle(a.yaw + SURPRISED_YAW_OFFSET);
+      const double correctedRot[4] = { 0.0, 0.0, 1.0, desired_yaw };
+      wb_supervisor_field_set_sf_rotation(rot_field, correctedRot);
     }
 
     double vel[6] = {
@@ -700,7 +726,7 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
     wb_supervisor_node_set_velocity(agent_node, vel);
 
     //Log updated state
-    RCLCPP_INFO(node_->get_logger(),
+    RCLCPP_DEBUG(node_->get_logger(),
       "[→To Webots] Agent '%s' id=%d vel=(%.3f,%.3f,%.3f,%.3f,%.3f,%.3f)",
       a.name.c_str(), a.id,
       vel[0], vel[1], vel[2], vel[3], vel[4], vel[5]
@@ -954,9 +980,9 @@ void HuNavPluginPrivate::HandleObstacles(){
           geometry_msgs::msg::Point p;
           p.x = cp.x(); p.y = cp.y(); p.z = cp.z();
           ped.closest_obs.push_back(p);
-          // RCLCPP_INFO(node_->get_logger(),
-          // " Pedestrian %d closest obstacle on '%s' at [%.2f, %.2f, %.2f]",
-          // i, modelName, p.x, p.y, p.z);
+          RCLCPP_DEBUG(node_->get_logger(),
+          " Pedestrian %d closest obstacle on '%s' at [%.2f, %.2f, %.2f]",
+          i, modelName, p.x, p.y, p.z);
         }
       }
       
@@ -1248,7 +1274,7 @@ void HuNavPlugin::step() {
           interp.agents.push_back(a);
 
           double yaw_deg = a.yaw * 180.0/M_PI;
-          RCLCPP_INFO(hnav_->node_->get_logger(),
+          RCLCPP_DEBUG(hnav_->node_->get_logger(),
             "[InterpolationAgents→] [%2d] %s  pos=(%.3f, %.3f, %.3f)  yaw=%.1f°  lin_vel=%.3f, ang_vel=%.3f",
             a.id,
             a.name.c_str(),
@@ -1275,7 +1301,7 @@ void HuNavPlugin::step() {
       // === LOG THE RAW SERVICE VALUES ===
       for (const auto &a : response->updated_agents.agents) {
         double yaw_deg = a.yaw * 180.0/M_PI;
-        RCLCPP_INFO(hnav_->node_->get_logger(),
+        RCLCPP_DEBUG(hnav_->node_->get_logger(),
           "[ComputeAgents→] [%2d] %s  pos=(%.3f, %.3f, %.3f)  yaw=%.1f°  lin_vel=%.3f, ang_vel=%.3f",
           a.id,
           a.name.c_str(),
