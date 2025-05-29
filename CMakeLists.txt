@@ -18,7 +18,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tinyxml2_vendor REQUIRED)
 find_package(TinyXML2 REQUIRED)
 
-set(WEBOTS_HOME "/home/amarsil/.ros/webotsR2025a/webots")
+# Get WEBOTS installation folder "/home/user/.ros/webotsR2025a/webots"
+set(WEBOTS_HOME $ENV{WEBOTS_HOME})
 
  # STEP 1: pull in Webots’ controller headers
  include_directories(
@@ -116,7 +117,7 @@ install(DIRECTORY
   launch
   resource
   worlds
-  config
+  scenarios
   DESTINATION share/${PROJECT_NAME}/
 )
 ament_export_include_directories(

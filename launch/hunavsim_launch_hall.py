@@ -146,7 +146,7 @@ def generate_launch_description():
      # agent configuration file
     agent_conf_file = PathJoinSubstitution([
         FindPackageShare('hunav_webots_wrapper'),
-        'config',
+        'scenarios',
         LaunchConfiguration('configuration_file')
     ])
 
