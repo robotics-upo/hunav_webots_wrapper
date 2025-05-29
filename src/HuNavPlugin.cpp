@@ -63,7 +63,6 @@ class HuNavPluginPrivate{
     /// \brief ros service to move an agent
     rclcpp::Client<hunav_msgs::srv::MoveAgent>::SharedPtr rosSrvMoveAgentClient;
 
-
     /// \brief ros service to reset the agents in the hunav_manager
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub;
 
@@ -100,7 +99,7 @@ class HuNavPluginPrivate{
                         const std::vector<std::string>& anim_names);
 
     std::string chooseAnimation(const hunav_msgs::msg::Agent& agent);
-    void manageAnimations(const double &dt);
+    void manageAnimations();
 
     rclcpp::Time rostime;
     double lastUpdate = wb_robot_get_time();
@@ -121,6 +120,7 @@ class HuNavPluginPrivate{
     // Last updated poses from HuNavSim
     hunav_msgs::msg::Agents last_service_agents;
     bool have_last_service = false;
+    double lastOverseerUpdate = wb_robot_get_time();
 
     std::string robotName;
     std::string agentName;
@@ -351,24 +351,24 @@ bool HuNavPluginPrivate::InitializeRobot(){
   double linearVelocity = std::hypot(vx, vy);
   double anvel = vel[5];  // yaw rate
 
-  this->robotAgent.position.position.x = xf;
-  this->robotAgent.position.position.y = yf;
-  this->robotAgent.yaw = yaw;
-  this->robotAgent.velocity.linear.x = vx;
-  this->robotAgent.velocity.linear.y = vy;
-  this->robotAgent.linear_vel = linearVelocity;
-  this->robotAgent.velocity.angular.z = anvel;
-  this->robotAgent.angular_vel = anvel;
+  robotAgent.position.position.x = xf;
+  robotAgent.position.position.y = yf;
+  robotAgent.yaw = yaw;
+  robotAgent.velocity.linear.x = vx;
+  robotAgent.velocity.linear.y = vy;
+  robotAgent.linear_vel = linearVelocity;
+  robotAgent.velocity.angular.z = anvel;
+  robotAgent.angular_vel = anvel;
 
-  this->robotAgent.id = wb_supervisor_node_get_id(node);
-  this->robotAgent.type = hunav_msgs::msg::Agent::ROBOT;
-  this->robotAgent.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_REGULAR;
-  this->robotAgent.behavior.state = hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE;
-  this->robotAgent.name = robotName;
-  this->robotAgent.group_id = -1;
-  this->robotAgent.radius = 0.35;
+  robotAgent.id = wb_supervisor_node_get_id(node);
+  robotAgent.type = hunav_msgs::msg::Agent::ROBOT;
+  robotAgent.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_REGULAR;
+  robotAgent.behavior.state = hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE;
+  robotAgent.name = robotName;
+  robotAgent.group_id = -1;
+  robotAgent.radius = 0.8;
 
-  this->init_robotAgent = this->robotAgent;
+  init_robotAgent = robotAgent;
 
   return true;
 
@@ -536,20 +536,20 @@ bool HuNavPluginPrivate::GetRobot(const double &dt){
   // double vx = (xf - xi) / dt;
   // double vy = (yf - yi) / dt;
 
-  this->robotAgent.position.position.x = xf;
-  this->robotAgent.position.position.y = yf;
-  this->robotAgent.yaw = yaw;
-  this->robotAgent.velocity.linear.x = vx;
-  this->robotAgent.velocity.linear.y = vy;
-  this->robotAgent.linear_vel = linearVelocity;
-  this->robotAgent.velocity.angular.z = anvel;
-  this->robotAgent.angular_vel = anvel;
+  robotAgent.position.position.x = xf;
+  robotAgent.position.position.y = yf;
+  robotAgent.yaw = yaw;
+  robotAgent.velocity.linear.x = vx;
+  robotAgent.velocity.linear.y = vy;
+  robotAgent.linear_vel = linearVelocity;
+  robotAgent.velocity.angular.z = anvel;
+  robotAgent.angular_vel = anvel;
 
   // RCLCPP_INFO(node_->get_logger(),
-  // "Read robot pose: %s | pos: (%.2f, %.2f, %.2f) | rot: (%.2f, %.2f, %.2f, %.2f) | linvel: (%.2f) | angvel: (%.2f)",
+  // "Read robot pose: %s | pos: (%.2f, %.2f, %.2f) | linvel: (%.2f) | angvel: (%.2f)",
   // robotName.c_str(), 
   // newPos[0], newPos[1], newPos[2],
-  // rot[0], rot[1], rot[2], rot[3], linearVelocity, anvel);
+  // linearVelocity, anvel);
 
   return true;
 
@@ -604,7 +604,7 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
     // // // // //Update velocities manually
     // double dist = sqrt((xf - xi) * (xf - xi) + (yf - yi) * (yf - yi));
     // double linearVelocity = dist / dt;
-    // double anvel = normalizeAngle(yaw - ped.yaw) / dt;
+    // double anvel = normalizeAngle(yaw_f - ped.yaw) / dt;
     // double vx = (xf - xi) / dt;
     // double vy = (yf - yi) / dt;
 
@@ -614,7 +614,6 @@ bool HuNavPluginPrivate::GetPedestrians(const double &dt)
     pedestrians[i].name.c_str(), 
     newPos[0], newPos[1], newPos[2],
     yaw_f, linearVelocity, anvel);
-
 
     // Update the pedestrian’s velocity and angular velocity fields.
     ped.velocity.linear.x = vx;
@@ -677,7 +676,6 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
        a.position.position.y, 
        a.position.position.z,
      };
-    // wb_supervisor_field_set_sf_vec3f(trans_field, newPos);
  
     // --- Update the Rotation Field ---
     // The "rotation" field is of type SFVec4f and expects [axis_x, axis_y, axis_z, angle].
@@ -691,7 +689,6 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
 
     //Push that to Webots around Z:
     const double newRot[4] = { 0.0, 0.0, 1.0, yaw };
-    // wb_supervisor_field_set_sf_rotation(rot_field, newRot);
 
     // Check distance between desired and actual pose
     double dx = a.position.position.x - ped.position.position.x;
@@ -704,6 +701,7 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
     double vy = a.velocity.linear.y;
     double yaw_rate = a.velocity.angular.z;
     
+    wb_supervisor_field_set_sf_vec3f(trans_field, newPos);
     //The surprised animation look 90 degrees right, we must correct it --only-- in the simulator
     if (ped.behavior.type == hunav_msgs::msg::AgentBehavior::BEH_SURPRISED &&
     ped.behavior.state != hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE){
@@ -713,6 +711,9 @@ void HuNavPluginPrivate::UpdateWebotsPedestrians(const hunav_msgs::msg::Agents& 
       double desired_yaw = normalizeAngle(a.yaw + SURPRISED_YAW_OFFSET);
       const double correctedRot[4] = { 0.0, 0.0, 1.0, desired_yaw };
       wb_supervisor_field_set_sf_rotation(rot_field, correctedRot);
+    }
+    else{
+        wb_supervisor_field_set_sf_rotation(rot_field, newRot);
     }
 
     double vel[6] = {
@@ -1052,10 +1053,10 @@ bool HuNavPluginPrivate::Reset(){
 
   // Prepare request
   auto request = std::make_shared<hunav_msgs::srv::ResetAgents::Request>();
-  request->current_agents.agents = this->init_pedestrians;
-  request->current_agents.header.frame_id = this->globalFrame;
-  request->current_agents.header.stamp = node_->now();
-  request->robot = this->init_robotAgent;
+  request->current_agents.agents = init_pedestrians;
+  request->current_agents.header.frame_id = globalFrame;
+  request->current_agents.header.stamp = rclcpp::Time(static_cast<uint64_t>(wb_robot_get_time() * 1e9));;
+  request->robot = init_robotAgent;
 
   // Call service
   auto result = rosSrvResetClient->async_send_request(request);
@@ -1121,11 +1122,11 @@ std::string HuNavPluginPrivate::chooseAnimation(const hunav_msgs::msg::Agent& ag
   //                                      "142_01-walk_childist.bvh", "07_04-slow_walk.bvh",      "02_01-walk.bvh",
   //                                      "142_17-walk_scared.bvh",   "17_01-walk_with_anger.bvh" };
 
-  // Set idle animation if agent velocities are near zero
-  double lin_vel = agent.linear_vel;
-  if (agent.linear_vel < 1e-6) {
-      return "137_28-normal_wait.bvh";
-  }
+  // // Set idle animation if agent velocities are near zero
+  // double lin_vel = agent.linear_vel;
+  // if (agent.linear_vel < 1e-6) {
+  //     return "137_28-normal_wait.bvh";
+  // }
 
   //Choose inactive animations
   if (agent.behavior.state == hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE){
@@ -1153,7 +1154,7 @@ std::string HuNavPluginPrivate::chooseAnimation(const hunav_msgs::msg::Agent& ag
 
 }
 
-void HuNavPluginPrivate::manageAnimations(const double &dt) {
+void HuNavPluginPrivate::manageAnimations() {
   
   const hunav_msgs::msg::Agent* agent = nullptr;
   if(this->agentName == this->overseerName){
@@ -1217,7 +1218,8 @@ void HuNavPlugin::step() {
 
   /********************************UPDATE ALL OF THE AGENTS *********************************/
   if(hnav_->agentName == hnav_->overseerName){
-
+    
+    double overseer_dt = now - hnav_->lastOverseerUpdate;
     if (!hnav_->GetRobot(dt)){
         RCLCPP_ERROR(hnav_->node_->get_logger(), "Could not get robot!");
         return;
@@ -1234,7 +1236,7 @@ void HuNavPlugin::step() {
       auto request = std::make_shared<hunav_msgs::srv::ComputeAgents::Request>();
       hunav_msgs::msg::Agents agents;
       agents.header.frame_id = hnav_->globalFrame;
-      agents.header.stamp = hnav_->node_->now();
+      agents.header.stamp = rclcpp::Time(static_cast<uint64_t>(now * 1e9));;
       agents.agents = hnav_->pedestrians;
 
       request->robot = hnav_->robotAgent;
@@ -1243,12 +1245,9 @@ void HuNavPlugin::step() {
       hnav_->agents_request_start = hnav_->node_->now();  // New member variable
       hnav_->agents_future = hnav_->rosSrvComputeAgentsClient->async_send_request(request);
 
-      // service down → re-apply last known service positions
+      //***********If service does not respond, interpolate positions **********/
       if (hnav_->have_last_service) {
-        // hnav_->UpdateWebotsPedestrians(hnav_->last_service_agents, dt);
 
-        // RCLCPP_INFO(hnav_->node_->get_logger(),
-        //             "compute_agents unavailable, interpolating");
         // Build an interp message from the *current* Webots readings...
         hunav_msgs::msg::Agents interp;
         interp.header = hnav_->last_service_agents.header;  // keep frame_id, stamp
@@ -1313,10 +1312,11 @@ void HuNavPlugin::step() {
           a.angular_vel);
       }
       
-      hnav_->UpdateWebotsPedestrians(response->updated_agents, dt);
+      hnav_->UpdateWebotsPedestrians(response->updated_agents, overseer_dt);
       hnav_->last_service_agents = response->updated_agents;
       hnav_->have_last_service = true;
       hnav_->agents_future = {};
+      hnav_->lastOverseerUpdate = wb_robot_get_time();
     }
 
   }
@@ -1356,7 +1356,7 @@ void HuNavPlugin::step() {
   }
 
   //Apply animations to each agent
-  hnav_->manageAnimations(dt);
+  hnav_->manageAnimations();
   hnav_->lastUpdate = wb_robot_get_time();
 
 }

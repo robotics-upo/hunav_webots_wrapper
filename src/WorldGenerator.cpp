@@ -326,24 +326,12 @@ std::string WorldGenerator::generateAgentWBT(const hunav_msgs::msg::Agent &agent
   oss << "      USE AGENTBODY\n";
   oss << "    ]\n";
   oss << "  }\n";
-    
-  // default physics.
-  // oss << "  physics Physics { }\n";
 
-  // // --- Physics for a ~75 kg human ---
-  // oss << "  physics Physics {\n";
-  // oss << "    density       -1       # ignore density, use mass\n";
-  // oss << "    mass          75       # kg\n";
-  // oss << "    centerOfMass  [ 0 0 0.9 ]\n";
-  // oss << "    inertiaMatrix [\n";
-  // oss << "      1e6 1e6 1.0\n";  // Ixx Iyy Izz — > 0
-  // oss << "      0.0  0.0  0.0\n";   // Ixy Ixz Iyz — ok for symmetry
-  // oss << "    ]\n";
-  // oss << "    damping Damping {\n";
-  // oss << "      linear  0.5\n";
-  // oss << "      angular 2.0\n";
-  // oss << "    }\n";
-  // oss << "  }\n";
+  // --- Physics for a ~75 kg human ---
+  oss << "  physics Physics {\n";
+  oss << "    density       -1       # ignore density, use mass\n";
+  oss << "    mass          5       # kg\n";
+  oss << "  }\n";
 
   // controller.
   oss << "  controller \"<extern>\"\n";

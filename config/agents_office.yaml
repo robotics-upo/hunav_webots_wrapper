@@ -53,16 +53,16 @@ hunav_loader:
         max_vel: 1.5
         radius: 0.4
         behavior: 
-          type: 5 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
-          configuration: 5   # def: 0, custom:1, random_normal:2, random_uniform:3
+          type: 1 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+          configuration: 1   # def: 0, custom:1, random_normal:2, random_uniform:3
           duration: 40.0  # seg
           once: true
           vel: 0.5
           dist: 0.5
           goal_force_factor: 2.0
           obstacle_force_factor: 10.0
-          social_force_factor: 7.0
-          other_force_factor: 20.0
+          social_force_factor: 8.0
+          other_force_factor: 15.0
         init_pose:
           x: -3.62
           y: 5.11
