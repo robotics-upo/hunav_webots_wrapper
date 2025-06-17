@@ -366,7 +366,7 @@ bool HuNavPluginPrivate::InitializeRobot(){
   robotAgent.behavior.state = hunav_msgs::msg::AgentBehavior::BEH_NO_ACTIVE;
   robotAgent.name = robotName;
   robotAgent.group_id = -1;
-  robotAgent.radius = 0.8;
+  robotAgent.radius = 0.6;
 
   init_robotAgent = robotAgent;
 
