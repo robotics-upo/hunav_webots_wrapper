@@ -1,4 +1,4 @@
-image: factory_map.pgm
+image: factory.pgm
 mode: trinary
 resolution: 0.05
 origin: [-12, -15.6, 0]

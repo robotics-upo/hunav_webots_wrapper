@@ -1,4 +1,4 @@
-image: office_map.pgm
+image: office.pgm
 mode: trinary
 resolution: 0.05
 origin: [-5.19, -6.57, 0]
