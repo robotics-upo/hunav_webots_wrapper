@@ -100,7 +100,7 @@ def get_robot_nodes(*args):
     navigation_nodes = []
     nav2_params_file = 'nav2_params.yaml'
     wrapper_dir = get_package_share_directory('hunav_webots_wrapper') 
-    my_map = os.path.join(wrapper_dir, 'resource', 'maps', 'factory_map.yaml')
+    my_map = os.path.join(wrapper_dir, 'maps', 'factory.yaml')
     my_params = os.path.join(wrapper_dir, 'resource', nav2_params_file)
 
     if 'nav2_bringup' in get_packages_with_prefixes():
