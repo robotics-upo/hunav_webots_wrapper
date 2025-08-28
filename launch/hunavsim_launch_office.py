@@ -100,7 +100,7 @@ def get_robot_nodes(*args):
     navigation_nodes = []
     nav2_params_file = 'nav2_params.yaml'
     wrapper_dir = get_package_share_directory('hunav_webots_wrapper') 
-    my_map = os.path.join(wrapper_dir, 'resource', 'maps', 'office_map.yaml')
+    my_map = os.path.join(wrapper_dir, 'maps', 'office.yaml')
     my_params = os.path.join(wrapper_dir, 'resource', nav2_params_file)
 
     if 'nav2_bringup' in get_packages_with_prefixes():
@@ -132,6 +132,7 @@ def generate_launch_description():
 
     # World generation parameters
     world_file_name = LaunchConfiguration('world')
+
     urdf_folder_name = LaunchConfiguration('urdf_folder')
     robot_name = LaunchConfiguration('robot_name')
     global_frame = LaunchConfiguration('global_frame_to_publish')

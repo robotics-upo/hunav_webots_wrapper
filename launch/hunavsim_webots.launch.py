@@ -100,9 +100,6 @@ def get_robot_nodes(*args):
     navigation_nodes = []
     nav2_params_file = 'nav2_params.yaml'
     wrapper_dir = get_package_share_directory('hunav_webots_wrapper') 
-    #my_map = os.path.join(wrapper_dir, 'resource', 'maps', 'factory_map.yaml')
-    #map_path = os.path.join(wrapper_dir, 'maps', 'factory_map.yaml')
-
 
     map_path = PathJoinSubstitution([
         FindPackageShare("hunav_webots_wrapper"),
@@ -140,7 +137,7 @@ def generate_launch_description():
     package_dir = get_package_share_directory('hunav_webots_wrapper')
 
     # World generation parameters
-    #world_file_name = LaunchConfiguration('world')
+    world_file_name = LaunchConfiguration('world') #From environment
     urdf_folder_name = LaunchConfiguration('urdf_folder')
     robot_name = LaunchConfiguration('robot_name')
     global_frame = LaunchConfiguration('global_frame_to_publish')
@@ -157,13 +154,6 @@ def generate_launch_description():
         FindPackageShare('hunav_webots_wrapper'),
         'scenarios',
         LaunchConfiguration('configuration_file')
-    ])
-
-    # world base file
-    world_file_name = PathJoinSubstitution([
-        FindPackageShare('hunav_webots_wrapper'),
-        'worlds',
-        PythonExpression(["'", LaunchConfiguration('environment_name'), ".wbt'"])
     ])
 
     # Read the yaml file and load the parameters
@@ -286,13 +276,16 @@ def generate_launch_description():
         'metrics_file', default_value='metrics.yaml',
         description='Specify the name of the metrics configuration file in the cofig directory'
     )
-    # declare_arg_world = DeclareLaunchArgument(
-    #     'world', default_value='factory.wbt',
-    #     description='Specify world file name'
-    # )
+
     declare_arg_environment = DeclareLaunchArgument(
         'environment_name', default_value='factory',
         description='Specify the name of the environment. This is used to load the Webots environment file and map file.'
+    )
+    #We have to create this intermediate argument for the world file argument to be taken correctly
+    declare_arg_world = DeclareLaunchArgument(
+        'world',
+        default_value=PythonExpression(["'", LaunchConfiguration('environment_name'), "' + '.wbt'"]),
+        description='Specify world file name'
     )
 
     declare_urdf_folder = DeclareLaunchArgument(
@@ -337,6 +330,8 @@ def generate_launch_description():
     ld.add_action(declare_agents_conf_file)
     ld.add_action(declare_metrics_conf_file)
     ld.add_action(declare_arg_environment)
+    ld.add_action(declare_arg_world)
+
     ld.add_action(declare_urdf_folder)
     ld.add_action(declare_robot_name)
     ld.add_action(declare_frame_to_publish)
