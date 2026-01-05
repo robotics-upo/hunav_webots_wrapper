@@ -1,0 +1,135 @@
+hunav_loader:
+  ros__parameters:
+    yaml_base_name: factory_agents_2
+    simulator: Webots
+    map: factory
+    publish_people: true
+    global_goals:
+      1:
+        x: -7.120
+        y: -6.431
+      2:
+        x: 5.134
+        y: -8.703
+      3:
+        x: -6.926
+        y: -4.351
+      4:
+        x: 6.865
+        y: 0.992
+      5:
+        x: -5.585
+        y: 2.433
+      6:
+        x: -7.147
+        y: -7.452
+      7:
+        x: 5.103
+        y: -9.151
+      8:
+        x: 7.632
+        y: 0.928
+      9:
+        x: 7.248
+        y: -7.392
+      10:
+        x: 4.690
+        y: 2.658
+    agents:
+      - agent1
+      - agent2
+      - agent3
+      - agent4
+    agent1:
+      id: 1
+      group_id: 1
+      skin: 1
+      max_vel: 1.5
+      radius: 0.4
+      goal_radius: 0.3
+      cyclic_goals: true
+      init_pose:
+        x: -7.079
+        y: 1.438
+        z: 0.010
+        h: -1.597
+      behavior:
+        type: Regular
+        configuration: 2
+        goal_force_factor: 2.0
+        obstacle_force_factor: 13.9
+        social_force_factor: 9.7
+        other_force_factor: 20.0
+      goals:
+        - 1
+        - 5
+    agent2:
+      id: 2
+      group_id: 2
+      skin: 2
+      max_vel: 1.5
+      radius: 0.4
+      goal_radius: 0.3
+      cyclic_goals: true
+      init_pose:
+        x: -5.481
+        y: -8.310
+        z: 0.010
+        h: 0.045
+      behavior:
+        type: Regular
+        configuration: 2
+        goal_force_factor: 3.2
+        obstacle_force_factor: 9.5
+        social_force_factor: 6.6
+        other_force_factor: 20.0
+      goals:
+        - 2
+        - 6
+    agent3:
+      id: 3
+      group_id: 3
+      skin: 0
+      max_vel: 1.5
+      radius: 0.4
+      goal_radius: 0.3
+      cyclic_goals: true
+      init_pose:
+        x: 5.513
+        y: 2.077
+        z: 0.010
+        h: -3.068
+      behavior:
+        type: Regular
+        configuration: 2
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 3.0
+        other_force_factor: 20.0
+      goals:
+        - 5
+        - 10
+    agent4:
+      id: 4
+      group_id: 4
+      skin: 3
+      max_vel: 1.5
+      radius: 0.4
+      goal_radius: 0.3
+      cyclic_goals: true
+      init_pose:
+        x: 6.536
+        y: -8.278
+        z: 0.010
+        h: 2.147
+      behavior:
+        type: Regular
+        configuration: 2
+        goal_force_factor: 3.8
+        obstacle_force_factor: 9.1
+        social_force_factor: 3.0
+        other_force_factor: 20.0
+      goals:
+        - 6
+        - 3
+        - 2

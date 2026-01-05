@@ -60,7 +60,7 @@ WorldGenerator::WorldGenerator() : Node("hunav_webots_world_generator")
               ".cyclic_goals",
               ".goals" };
   // names of the goal parameters
-  goal_params_ = { ".x", ".y", ".h" };
+  goal_params_ = { ".x", ".y"}; //, ".h" };
 
   agents_srv_ = this->create_service<hunav_msgs::srv::GetAgents>(
       std::string("get_agents"), std::bind(&hunav::WorldGenerator::getAgentsService, this, _1, _2));
@@ -92,6 +92,8 @@ void WorldGenerator::readPluginParams()
                  "Package hunav_gazebo_wrapper not found in dir: %s!!!",
                  package_shared_dir.c_str());
   }
+  RCLCPP_INFO(this->get_logger(), "Share Package hunav_webots_wrapper found in dir: %s",
+               package_shared_dir.c_str());
   urdf_shared_dir = package_shared_dir + "/resource/";
   world_shared_dir = package_shared_dir + "/worlds/";
 
@@ -128,11 +130,18 @@ void WorldGenerator::readPluginParams()
   }
 
   // Define temporary output path in the same directory
-  base_world_path_ = world_shared_dir + base_world_name;
-  std::string temp_world = temp_dir.string() + "/" + base_world_name;
+  //base_world_path_ = world_shared_dir + base_world_name;
 
+  // base_world_name contains the complete path to the world file.
+  // we need to extract only the file name to create the temp copy
+  std::string base_world_file_name = fs::path(base_world_name).filename().string();
+  RCLCPP_INFO(this->get_logger(), "Base world file path: %s", base_world_name.c_str());
+  RCLCPP_INFO(this->get_logger(), "Base world file name: %s", base_world_file_name.c_str());
+
+  //std::string temp_world = temp_dir.string() + "/" + base_world_name;
+  std::string temp_world = temp_dir.string() + "/" + base_world_file_name;
   try {
-      fs::copy_file(base_world_path_, temp_world, fs::copy_options::overwrite_existing);
+      fs::copy_file(base_world_name, temp_world, fs::copy_options::overwrite_existing);
       RCLCPP_INFO(this->get_logger(), "Copied base world to: %s", temp_world.c_str());
   } catch (const fs::filesystem_error& e) {
       RCLCPP_ERROR(this->get_logger(), "Failed to copy world file: %s", e.what());
@@ -179,8 +188,18 @@ void WorldGenerator::readAgentParams()
       agent_params[i] = an + agent_params[i];
       // std::cout << "agent_params " << i << ": " << agent_params[i] <<
       // std::endl;
+      //RCLCPP_INFO(this->get_logger(), "agent_params %d: %s", i, agent_params[i].c_str());
     }
-    auto aparams = parameters_client->get_parameters(agent_params);
+    auto aparams = parameters_client->get_parameters({agent_params});
+
+    RCLCPP_INFO(this->get_logger(), "Agent parameters for %s:", an.c_str());
+    RCLCPP_INFO(this->get_logger(), "  %li parameters found", aparams.size());
+    for (unsigned int i = 0; i < aparams.size(); i++)
+    {
+      RCLCPP_INFO(this->get_logger(), "  %s: %s", aparams[i].get_name().c_str(),
+                  aparams[i].value_to_string().c_str());
+      // std::cout << "  " << aparams[i].get_name() << ": " << aparams[i].value_to_string() << std::endl;
+    }
 
     // std::cout << "aparams: " << aparams << std::endl;
     hunav_msgs::msg::Agent a;
@@ -194,7 +213,25 @@ void WorldGenerator::readAgentParams()
     // std::cout << "skin: " << a.skin << std::endl;
 
     // behavior
-    a.behavior.type = aparams[2].as_int();
+    //type
+    std::string behavior_type = aparams[2].as_string();
+    if (behavior_type == "Regular")
+        a.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_REGULAR;
+    else if(behavior_type == "Impassive")
+        a.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_IMPASSIVE;
+    else if(behavior_type == "Surprised")
+        a.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_SURPRISED;
+    else if(behavior_type == "Scared")
+        a.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_SCARED;
+    else if(behavior_type == "Curious")
+        a.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_CURIOUS;
+    else if(behavior_type == "Threatening")
+        a.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_THREATENING;
+    else{
+        RCLCPP_WARN(this->get_logger(), "Unknown behavior type: %s, defaulting to Regular", behavior_type.c_str());
+        a.behavior.type = hunav_msgs::msg::AgentBehavior::BEH_REGULAR;
+    }
+    //a.behavior.type = aparams[2].as_int();
     a.behavior.configuration = aparams[3].as_int();
     a.behavior.duration = aparams[4].as_double();
     a.behavior.once = aparams[5].as_bool();
@@ -221,36 +258,37 @@ void WorldGenerator::readAgentParams()
     a.position.position.z = aparams[17].as_double();
     a.yaw = aparams[18].as_double();
     tf2::Quaternion myQuaternion;
-    myQuaternion.setRPY(0, 0, aparams[9].as_double());
+    myQuaternion.setRPY(0, 0, a.yaw);
     a.position.orientation = tf2::toMsg(myQuaternion);
     a.goal_radius = aparams[19].as_double();
     a.cyclic_goals = aparams[20].as_bool();
 
-    std::cout << "id: " << a.id << " skin:" << (int)a.skin << " group_id:" << (int)a.group_id
-              << " max_vel:" << a.desired_velocity << " radius:" << a.radius << std::endl
-              << " initpose.x:" << a.position.position.x << " initpose.y:" << a.position.position.y << std::endl;
-    std::cout << "Behavior:" << std::endl;
-    std::cout << "type:" << (int)a.behavior.type << " configuration:" << (int)a.behavior.configuration
-              << " duration:" << a.behavior.duration << " once:" << a.behavior.once << " vel:" << a.behavior.vel
-              << " dist:" << a.behavior.dist << " goal_force_factor:" << a.behavior.goal_force_factor
-              << " obstacle_force_factor:" << a.behavior.obstacle_force_factor
-              << " social_force_factor:" << a.behavior.social_force_factor
-              << " other_force_factor:" << a.behavior.other_force_factor << std::endl;
+    // std::cout << "id: " << a.id << " skin:" << (int)a.skin << " group_id:" << (int)a.group_id
+    //           << " max_vel:" << a.desired_velocity << " radius:" << a.radius << std::endl
+    //           << " initpose.x:" << a.position.position.x << " initpose.y:" << a.position.position.y << std::endl;
+    // std::cout << "Behavior:" << std::endl;
+    // std::cout << "type:" << (int)a.behavior.type << " configuration:" << (int)a.behavior.configuration
+    //           << " duration:" << a.behavior.duration << " once:" << a.behavior.once << " vel:" << a.behavior.vel
+    //           << " dist:" << a.behavior.dist << " goal_force_factor:" << a.behavior.goal_force_factor
+    //           << " obstacle_force_factor:" << a.behavior.obstacle_force_factor
+    //           << " social_force_factor:" << a.behavior.social_force_factor
+    //           << " other_force_factor:" << a.behavior.other_force_factor << std::endl;
 
-    auto goal_names = aparams[21].as_string_array();
-    for (std::string goal : goal_names)
+    auto goal_names = aparams[21].as_integer_array();
+    for (auto goal : goal_names)
     {
       std::vector<std::string> gnames = goal_params_;
       for (unsigned int i = 0; i < goal_params_.size(); i++)
       {
-        gnames[i] = an + "." + goal + goal_params_[i];
+        //gnames[i] = an + "." + goal + goal_params_[i];
+        gnames[i] = "global_goals." + std::to_string(goal) + goal_params_[i];
       }
       auto gparams = parameters_client->get_parameters({ gnames });
       geometry_msgs::msg::Pose p;
       p.position.x = gparams[0].as_double();
       p.position.y = gparams[1].as_double();
       tf2::Quaternion quat;
-      quat.setRPY(0, 0, gparams[2].as_double());
+      quat.setRPY(0, 0, 0);
       p.orientation = tf2::toMsg(quat);
       a.goals.push_back(p);
       std::cout << "goal: " << goal << " x:" << p.position.x << " y:" << p.position.y << std::endl;
