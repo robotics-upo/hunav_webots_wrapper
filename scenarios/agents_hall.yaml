@@ -6,38 +6,45 @@ hunav_loader:
     publish_people: true
     global_goals:
       1:
-        x: 1.45
-        y: 8.29
+        x: 2.543
+        y: 4.895
       2:
-        x: 1.45
-        y: 2.95
+        x: 2.672
+        y: 9.538
       3:
-        x: 2.14
-        y: -1.25
+        x: -1.713
+        y: 9.255
       4:
-        x: -5.01
-        y: 5.0
+        x: -5.042
+        y: 5.540
       5:
-        x: -0.48
-        y: 7.71
+        x: -4.529
+        y: 0.896
       6:
-        x: -0.95
-        y: 2.88
+        x: -2.000
+        y: 4.801
       7:
-        x: 1.73
-        y: -8.71
+        x: -7.925
+        y: 1.180
       8:
-        x: 2.63
-        y: -5.52
+        x: -1.808
+        y: -8.990
       9:
-        x: -0.18
-        y: -3.46
-
+        x: 2.543
+        y: -8.640
+      10:
+        x: 2.608
+        y: 1.600
+      11:
+        x: 0.624
+        y: 2.977
+      12:
+        x: 0.816
+        y: -7.199
     agents:
       - agent1
       - agent2
       - agent3
-    
     agent1:
       id: 1
       group_id: -1
@@ -51,9 +58,9 @@ hunav_loader:
         y: 4.34
         z: 0.01
         h: 0.0
-      behavior: 
-        type: Regular # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
-        configuration: 0 # def: 0, custom:1, random_normal:2, random_uniform:3
+      behavior:
+        type: Regular
+        configuration: 0
         goal_force_factor: 2.0
         obstacle_force_factor: 10.0
         social_force_factor: 28.0
@@ -62,53 +69,59 @@ hunav_loader:
         - 1
         - 2
         - 3
-    
+        - 6
     agent2:
-        id: 2
-        group_id: -1
-        skin: 1
-        max_vel: 1.5
-        radius: 0.5
-        goal_radius: 0.3
-        cyclic_goals: true
-        init_pose:
-          x: -7.94
-          y: 1.03
-          z: 0.01
-          h: 0.0
-        behavior: 
-          type: Scared # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
-          configuration: 0   # def: 0, custom:1, random_normal:2, random_uniform:3
-          goal_force_factor: 2.0
-          obstacle_force_factor: 10.0
-          social_force_factor: 28.0
-          other_force_factor: 20.0
-        goals:
-          - 4
-          - 5
-          - 6
-
-    agent3:
-      id: 3
+      id: 2
       group_id: -1
-      skin: 2
+      skin: 1
       max_vel: 1.5
       radius: 0.5
       goal_radius: 0.3
       cyclic_goals: true
       init_pose:
-        x: -2.05
-        y: -8.71
+        x: -7.94
+        y: 1.03
         z: 0.01
         h: 0.0
-      behavior: 
-        type: Curious # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
-        configuration: 1   # def: 0, custom:1, random_normal:2, random_uniform:3
+      behavior:
+        type: Scared
+        configuration: 0
         goal_force_factor: 2.0
         obstacle_force_factor: 10.0
         social_force_factor: 28.0
         other_force_factor: 20.0
       goals:
+        - 5
+        - 4
         - 7
-        - 8
+    agent3:
+      id: 3
+      group_id: 3
+      skin: 2
+      max_vel: 1.5
+      radius: 0.4
+      goal_radius: 0.3
+      cyclic_goals: true
+      init_pose:
+        x: -2.050
+        y: -8.710
+        z: 0.010
+        h: 0.000
+      behavior:
+        type: Curious
+        dist: 0.00
+        duration: 0.0
+        once: false
+        vel: 0.00
+        stop_dist: 0.00
+        configuration: 1
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 28.0
+        other_force_factor: 20.0
+      goals:
         - 9
+        - 10
+        - 11
+        - 12
+        - 8
