@@ -1,130 +1,114 @@
 hunav_loader:
   ros__parameters:
+    yaml_base_name: agents_hall
+    simulator: Webots
     map: hall
     publish_people: true
+    global_goals:
+      1:
+        x: 1.45
+        y: 8.29
+      2:
+        x: 1.45
+        y: 2.95
+      3:
+        x: 2.14
+        y: -1.25
+      4:
+        x: -5.01
+        y: 5.0
+      5:
+        x: -0.48
+        y: 7.71
+      6:
+        x: -0.95
+        y: 2.88
+      7:
+        x: 1.73
+        y: -8.71
+      8:
+        x: 2.63
+        y: -5.52
+      9:
+        x: -0.18
+        y: -3.46
+
     agents:
       - agent1
       - agent2
       - agent3
+    
     agent1:
       id: 1
-      skin: 0
       group_id: -1
+      skin: 0
       max_vel: 1.5
       radius: 0.5
-      behavior: 
-        type: 1 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
-        configuration: 1 # def: 0, custom:1, random_normal:2, random_uniform:3
-        duration: 40.0  # seg
-        once: true
-        vel: 0.5
-        dist: 0.15
-        goal_force_factor: 2.0
-        obstacle_force_factor: 10.0
-        social_force_factor: 28.0
-        other_force_factor: 20.0
+      goal_radius: 0.3
+      cyclic_goals: true
       init_pose:
         x: -2.7
         y: 4.34
         z: 0.01
         h: 0.0
-      goal_radius: 0.3
-      cyclic_goals: true
+      behavior: 
+        type: Regular # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 0 # def: 0, custom:1, random_normal:2, random_uniform:3
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 28.0
+        other_force_factor: 20.0
       goals:
-        - g0
-        - g1
-        - g2
-      g0:
-        x: 1.45
-        y: 8.29
-        h: 0.0
-      g1:
-        x: 1.45
-        y: 2.95
-        h: 0.0
-      g2:
-        x: 2.14
-        y: -1.25
-        h: 0.0
+        - 1
+        - 2
+        - 3
     
     agent2:
         id: 2
-        skin: 1
         group_id: -1
+        skin: 1
         max_vel: 1.5
         radius: 0.5
-        behavior: 
-          type: 4 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
-          configuration: 1   # def: 0, custom:1, random_normal:2, random_uniform:3
-          duration: 40.0  # seg
-          once: true
-          vel: 0.5
-          dist: 0.15
-          goal_force_factor: 2.0
-          obstacle_force_factor: 10.0
-          social_force_factor: 28.0
-          other_force_factor: 20.0
+        goal_radius: 0.3
+        cyclic_goals: true
         init_pose:
           x: -7.94
           y: 1.03
           z: 0.01
           h: 0.0
-        goal_radius: 0.3
-        cyclic_goals: true
+        behavior: 
+          type: Scared # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+          configuration: 0   # def: 0, custom:1, random_normal:2, random_uniform:3
+          goal_force_factor: 2.0
+          obstacle_force_factor: 10.0
+          social_force_factor: 28.0
+          other_force_factor: 20.0
         goals:
-          - g0
-          - g1
-          - g2
-        g0:
-          x: -5.01
-          y: 5.0
-          h: 0.00000
-        g1:
-          x: -0.48
-          y: 7.71
-          h: 1.5708
-        g2:
-          x: -0.95
-          y: 2.88
-          h: 2.3562
+          - 4
+          - 5
+          - 6
 
     agent3:
       id: 3
-      skin: 2
       group_id: -1
+      skin: 2
       max_vel: 1.5
       radius: 0.5
-      behavior: 
-        type: 5 # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
-        configuration: 1   # def: 0, custom:1, random_normal:2, random_uniform:3
-        duration: 40.0  # seg
-        once: true
-        vel: 0.6
-        dist: 0.15
-        goal_force_factor: 2.0
-        obstacle_force_factor: 10.0
-        social_force_factor: 28.0
-        other_force_factor: 20.0
+      goal_radius: 0.3
+      cyclic_goals: true
       init_pose:
         x: -2.05
         y: -8.71
         z: 0.01
         h: 0.0
-      goal_radius: 0.3
-      cyclic_goals: true
+      behavior: 
+        type: Curious # REGULAR=1, IMPASSIVE=2, SURPRISED=3, SCARED=4, CURIOUS=5, THREATENING=6
+        configuration: 1   # def: 0, custom:1, random_normal:2, random_uniform:3
+        goal_force_factor: 2.0
+        obstacle_force_factor: 10.0
+        social_force_factor: 28.0
+        other_force_factor: 20.0
       goals:
-        - g0
-        - g1
-        - g2
-      g0:
-        x: 1.73
-        y: -8.71
-        h: 0.0
-      g1:
-        x: 2.63
-        y: -5.52
-        h: 0.04
-      g2:
-        x: -0.18
-        y: -3.46
-        h: 3.14159
+        - 7
+        - 8
+        - 9
