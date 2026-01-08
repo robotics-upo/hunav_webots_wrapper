@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root main_tree_to_execute="RegularNavTree" BTCPP_format="4">
+<root main_tree_to_execute="CuriousNavTree" BTCPP_format="4">
 
   <TreeNodesModel>
     <!-- Conditions -->
@@ -212,9 +212,9 @@
   </TreeNodesModel>
   <include path="BTRegularNav.xml" />
 
-    <BehaviorTree ID="RegularNavTree">
-        <Fallback name="RegularNavFallback">
-        
+    <BehaviorTree ID="CuriousNavTree">
+        <Fallback name="CuriousFallback">
+
             <Sequence name="SetGoals">
                 <RunOnce>
                     <SetGoal agent_id="{id}" goal_id="1"/>
@@ -231,15 +231,28 @@
                     </RunOnce>
                 </Inverter>
             </Sequence>
-        
-            <Sequence name="RegularNavigation">
+
+            <Sequence name="CurNav"> <!--ReactiveSequence-->
+                <!-- <IsRobotVisible agent_id="{id}" distance="10.0" />
                 <Inverter>
-                    <IsGoalReached agent_id="{id}" />
+                    <TimeExpiredCondition seconds="40" ts="{dt}" only_once="false" />
                 </Inverter>
-                <RegularNav agent_id="{id}" time_step="{dt}" />
+                <CuriousNav agent_id="{id}" time_step="{dt}" stop_distance="1.5" agent_vel="1.5" /> -->
+
+            	<RunOnce>
+                    <IsRobotVisible agent_id="{id}" distance="10" />
+                </RunOnce>
+                
+                <RunOnce>
+                    <ApproachRobot agent_id="{id}" time_step="{dt}" closest_dist="1.5" max_vel="1.5" duration="40" />
+                </RunOnce>
+
             </Sequence>
-            <UpdateGoal agent_id="{id}" />
+            <Sequence name="RegNav">
+                <SetBlackboard output_key="agentid" value="{id}" />
+                <SetBlackboard output_key="timestep" value="{dt}" />
+                <SubTree ID="RegularNavTree" id="{agentid}" dt="{timestep}" />
+            </Sequence>
         </Fallback>
     </BehaviorTree>
-
 </root>
