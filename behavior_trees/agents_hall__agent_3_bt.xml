@@ -243,11 +243,11 @@
                 <CuriousNav agent_id="{id}" time_step="{dt}" stop_distance="0" agent_vel="1.5" /> -->
 
             	<RunOnce>
-                    <IsRobotVisible agent_id="{id}" distance="0" />
+                    <IsRobotVisible agent_id="{id}" distance="10" />
                 </RunOnce>
                 
                 <RunOnce>
-                    <ApproachRobot agent_id="{id}" time_step="{dt}" closest_dist="0" max_vel="1.5" duration="0" />
+                    <ApproachRobot agent_id="{id}" time_step="{dt}" closest_dist="1.2" max_vel="1.5" duration="40" />
                 </RunOnce>
 
             </Sequence>

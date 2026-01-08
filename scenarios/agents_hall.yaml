@@ -109,11 +109,11 @@ hunav_loader:
         h: 0.000
       behavior:
         type: Curious
-        dist: 0.00
-        duration: 0.0
-        once: false
-        vel: 0.00
-        stop_dist: 0.00
+        dist: 10.0
+        duration: 40.0
+        once: true
+        vel: 1.5
+        stop_dist: 1.2
         configuration: 1
         goal_force_factor: 2.0
         obstacle_force_factor: 10.0
